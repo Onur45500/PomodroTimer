@@ -1,19 +1,103 @@
 ﻿@page "/counter"
 @rendermode InteractiveServer
 
-<PageTitle>Counter</PageTitle>
+<PageTitle>Pomodoro Timer</PageTitle>
 
-<h1>Counter</h1>
+<h1>Pomodoro Timer</h1>
 
-<p role="status">Current count: @currentCount</p>
+<p role="status">Time left: @timeLeft</p>
 
-<button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
+<p>Session: @sessionType</p>
+
+<button class="btn btn-primary" @onclick="StartPauseTimer">
+    @((isTimerRunning ? "Pause" : "Start"))
+</button>
+
+<button class="btn btn-danger" @onclick="ResetTimer" disabled="@(!isTimerRunning)">
+    Reset
+</button>
 
 @code {
-    private int currentCount = 0;
+    private TimeSpan timeLeft = TimeSpan.FromMinutes(25); // Initial Pomodoro time
+    private string sessionType = "Work Session"; // Default session type
+    private bool isTimerRunning = false;
+    private int workSessionsCompleted = 0;
+    private System.Threading.Timer? timer;
+    private int pomodoroDuration = 25; // in minutes
+    private int shortBreakDuration = 5; // in minutes
+    private int longBreakDuration = 15; // in minutes
 
-    private void IncrementCount()
+    // Start or pause the timer
+    private void StartPauseTimer()
     {
-        currentCount++;
+        if (isTimerRunning)
+        {
+            // Pause the timer
+            isTimerRunning = false;
+            timer?.Change(Timeout.Infinite, 0);
+        }
+        else
+        {
+            // Start the timer
+            isTimerRunning = true;
+            timer = new System.Threading.Timer(UpdateTimer, null, 1000, 1000);
+        }
+    }
+
+    // Update the timer each second
+    private void UpdateTimer(object? state)
+    {
+        if (timeLeft.TotalSeconds > 0)
+        {
+            timeLeft = timeLeft.Subtract(TimeSpan.FromSeconds(1));
+            InvokeAsync(StateHasChanged); // Update UI
+        }
+        else
+        {
+            timer?.Dispose();
+            TimerFinished();
+        }
+    }
+
+    // Handle when the timer reaches 0
+    private void TimerFinished()
+    {
+        isTimerRunning = false;
+
+        if (sessionType == "Work Session")
+        {
+            workSessionsCompleted++;
+            if (workSessionsCompleted % 4 == 0)
+            {
+                // Long break after every 4 work sessions
+                timeLeft = TimeSpan.FromMinutes(longBreakDuration);
+                sessionType = "Long Break";
+            }
+            else
+            {
+                // Short break
+                timeLeft = TimeSpan.FromMinutes(shortBreakDuration);
+                sessionType = "Short Break";
+            }
+        }
+        else
+        {
+            // After break, start work session again
+            timeLeft = TimeSpan.FromMinutes(pomodoroDuration);
+            sessionType = "Work Session";
+        }
+
+        InvokeAsync(StateHasChanged); // Update UI
+    }
+
+    // Reset the timer
+    private void ResetTimer()
+    {
+        isTimerRunning = false;
+        timer?.Dispose();
+
+        timeLeft = TimeSpan.FromMinutes(pomodoroDuration);
+        sessionType = "Work Session";
+        InvokeAsync(StateHasChanged);
     }
 }
