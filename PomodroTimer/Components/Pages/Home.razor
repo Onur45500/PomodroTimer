@@ -12,26 +12,27 @@
     <p>Session: @sessionType</p>
 
     <div>
-        <button class="btn btn-primary" @onclick="StartPauseTimer">
-            @((isTimerRunning ? "Pause" : "Start"))
-        </button>
+    <button class="btn btn-primary" @onclick="StartPauseTimer">
+        @((isTimerRunning ? "Pause" : "Start"))
+    </button>
 
-        <button class="btn btn-danger" @onclick="ResetTimer" disabled="@(!isTimerRunning)">
-            Reset
-        </button>
+    <button class="btn btn-danger" @onclick="ResetTimer">
+        Reset
+    </button>
     </div>
-</div>
 
+    <button class="btn btn-success mt-2" @onclick="StartBreakTimer">
+        Get a Break (5 mins)
+    </button>
+</div>
 
 @code {
     private TimeSpan timeLeft = TimeSpan.FromMinutes(25); // Initial Pomodoro time
     private string sessionType = "Work Session"; // Default session type
     private bool isTimerRunning = false;
-    private int workSessionsCompleted = 0;
     private System.Threading.Timer? timer;
     private int pomodoroDuration = 25; // in minutes
     private int shortBreakDuration = 5; // in minutes
-    private int longBreakDuration = 15; // in minutes
 
     // Start or pause the timer
     private void StartPauseTimer()
@@ -69,30 +70,16 @@
     private void TimerFinished()
     {
         isTimerRunning = false;
-
         if (sessionType == "Work Session")
         {
-            workSessionsCompleted++;
-            if (workSessionsCompleted % 4 == 0)
-            {
-                // Long break after every 4 work sessions
-                timeLeft = TimeSpan.FromMinutes(longBreakDuration);
-                sessionType = "Long Break";
-            }
-            else
-            {
-                // Short break
-                timeLeft = TimeSpan.FromMinutes(shortBreakDuration);
-                sessionType = "Short Break";
-            }
+            sessionType = "Short Break";
+            timeLeft = TimeSpan.FromMinutes(shortBreakDuration);
         }
         else
         {
-            // After break, start work session again
             timeLeft = TimeSpan.FromMinutes(pomodoroDuration);
             sessionType = "Work Session";
         }
-
         InvokeAsync(StateHasChanged); // Update UI
     }
 
@@ -101,9 +88,19 @@
     {
         isTimerRunning = false;
         timer?.Dispose();
-
         timeLeft = TimeSpan.FromMinutes(pomodoroDuration);
         sessionType = "Work Session";
         InvokeAsync(StateHasChanged);
     }
+
+    // Start a 5-minute break timer
+    private void StartBreakTimer()
+    {
+        isTimerRunning = true;
+        sessionType = "Break";
+        timeLeft = TimeSpan.FromMinutes(5);
+        timer = new System.Threading.Timer(UpdateTimer, null, 1000, 1000);
+        InvokeAsync(StateHasChanged);
+    }
 }
+
