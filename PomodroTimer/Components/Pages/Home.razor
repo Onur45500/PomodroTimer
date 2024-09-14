@@ -1,25 +1,33 @@
 ﻿@page "/"
 
 @rendermode InteractiveServer
-
 <div class="d-flex flex-column align-items-center justify-content-center" style="height: 100vh;">
     <PageTitle>Pomodoro Timer</PageTitle>
 
     <h1>Pomodoro Timer</h1>
 
+    <div class="mt-4">
+        <label for="pomodoroDurationInput">Pomodoro Duration (minutes):</label>
+        <input type="number" id="pomodoroDurationInput" @bind="pomodoroDurationInput" min="1" />
+
+        @* <label for="shortBreakDurationInput" class="mt-2">Short Break Duration (minutes):</label>
+        <input type="number" id="shortBreakDurationInput" @bind="shortBreakDurationInput" min="1" /> *@
+
+        @* <button class="btn btn-primary mt-2" @onclick="ApplySettings">Apply Settings</button> *@
+    </div>
+
     <p role="status">Time left: @timeLeft</p>
 
     <p>Session: @sessionType</p>
 
-    <div>
-        <button class="btn @startPauseButtonClass" @onclick="StartPauseTimer" style="transition: background-color 0.3s, color 0.3s;">
-            @((isTimerRunning ? "Pause" : "Start"))
-        </button>
+    <button class="btn @startPauseButtonClass" @onclick="StartPauseTimer" style="transition: background-color 0.3s, color 0.3s;">
+        @((isTimerRunning ? "Pause" : "Start"))
+    </button>
 
-        <button class="btn btn-danger" @onclick="ResetTimer">
-            Reset
-        </button>
-    </div>
+    <button class="btn btn-danger" @onclick="ResetTimer">
+        Reset
+    </button>
+
     <button class="btn btn-success mt-2" @onclick="StartBreakTimer">
         Get a Break (5 mins)
     </button>
@@ -32,6 +40,9 @@
     private System.Threading.Timer? timer;
     private int pomodoroDuration = 25; // in minutes
     private int shortBreakDuration = 5; // in minutes
+
+    private int pomodoroDurationInput = 25; // Default value for input
+    private int shortBreakDurationInput = 5; // Default value for input
 
     // Dynamically change button color
     private string startPauseButtonClass => isTimerRunning ? "btn-warning" : "btn-primary";
@@ -84,7 +95,7 @@
         }
         else
         {
-            timeLeft = TimeSpan.FromMinutes(pomodoroDuration);
+            timeLeft = TimeSpan.FromMinutes(pomodoroDurationInput);
             sessionType = "Work Session";
         }
         InvokeAsync(StateHasChanged); // Update UI
@@ -96,7 +107,7 @@
         isTimerRunning = false;
         timer?.Dispose();
         timer = null; // Reset the timer to null
-        timeLeft = TimeSpan.FromMinutes(pomodoroDuration);
+        timeLeft = TimeSpan.FromMinutes(pomodoroDurationInput);
         sessionType = "Work Session";
 
         // Force UI refresh
@@ -106,6 +117,7 @@
     // Start a 5-minute break timer, interrupting any running session
     private void StartBreakTimer()
     {
+
         // Interrupt the current session and start the break timer
         isTimerRunning = true;
         sessionType = "Break";
@@ -124,4 +136,30 @@
         // Force UI refresh
         InvokeAsync(StateHasChanged);
     }
+
+    // Apply the new settings for Pomodoro and break durations
+    // private void ApplySettings()
+    // {
+    //     if (pomodoroDurationInput > 0)
+    //     {
+    //         pomodoroDuration = pomodoroDurationInput;
+    //     }
+    //     if (shortBreakDurationInput > 0)
+    //     {
+    //         shortBreakDuration = shortBreakDurationInput;
+    //     }
+
+    //     // Update the timeLeft based on the new settings if needed
+    //     if (sessionType == "Work Session")
+    //     {
+    //         timeLeft = TimeSpan.FromMinutes(pomodoroDuration);
+    //     }
+    //     else if (sessionType == "Short Break")
+    //     {
+    //         timeLeft = TimeSpan.FromMinutes(shortBreakDuration);
+    //     }
+
+    //     // Force UI refresh
+    //     InvokeAsync(StateHasChanged);
+    // }
 }
