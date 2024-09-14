@@ -11,7 +11,7 @@
 
     <p>Session: @sessionType</p>
 
-    <button class="btn btn-primary" @onclick="StartPauseTimer">
+    <button class="@startPauseButtonClass" @onclick="StartPauseTimer" style="transition: background-color 0.3s, color 0.3s;">
         @((isTimerRunning ? "Pause" : "Start"))
     </button>
 
@@ -31,6 +31,7 @@
     private System.Threading.Timer? timer;
     private int pomodoroDuration = 25; // in minutes
     private int shortBreakDuration = 5; // in minutes
+    private string startPauseButtonClass => isTimerRunning ? "btn btn-warning" : "btn btn-primary"; // Dynamically change button color
 
     // Start or pause the timer
     private void StartPauseTimer()
@@ -106,4 +107,3 @@
         }
     }
 }
-
