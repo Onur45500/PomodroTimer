@@ -11,7 +11,6 @@
 
     <p>Session: @sessionType</p>
 
-    <div>
     <button class="btn btn-primary" @onclick="StartPauseTimer">
         @((isTimerRunning ? "Pause" : "Start"))
     </button>
@@ -19,7 +18,6 @@
     <button class="btn btn-danger" @onclick="ResetTimer">
         Reset
     </button>
-    </div>
 
     <button class="btn btn-success mt-2" @onclick="StartBreakTimer">
         Get a Break (5 mins)
@@ -43,9 +41,9 @@
             isTimerRunning = false;
             timer?.Change(Timeout.Infinite, 0);
         }
-        else
+        else if (timer == null)
         {
-            // Start the timer
+            // Start the timer if it's not already running
             isTimerRunning = true;
             timer = new System.Threading.Timer(UpdateTimer, null, 1000, 1000);
         }
@@ -62,6 +60,7 @@
         else
         {
             timer?.Dispose();
+            timer = null; // Set the timer to null after it finishes
             TimerFinished();
         }
     }
@@ -88,6 +87,7 @@
     {
         isTimerRunning = false;
         timer?.Dispose();
+        timer = null; // Reset the timer to null
         timeLeft = TimeSpan.FromMinutes(pomodoroDuration);
         sessionType = "Work Session";
         InvokeAsync(StateHasChanged);
@@ -96,11 +96,14 @@
     // Start a 5-minute break timer
     private void StartBreakTimer()
     {
-        isTimerRunning = true;
-        sessionType = "Break";
-        timeLeft = TimeSpan.FromMinutes(5);
-        timer = new System.Threading.Timer(UpdateTimer, null, 1000, 1000);
-        InvokeAsync(StateHasChanged);
+        if (!isTimerRunning && timer == null)
+        {
+            isTimerRunning = true;
+            sessionType = "Break";
+            timeLeft = TimeSpan.FromMinutes(5);
+            timer = new System.Threading.Timer(UpdateTimer, null, 1000, 1000);
+            InvokeAsync(StateHasChanged);
+        }
     }
 }
 
