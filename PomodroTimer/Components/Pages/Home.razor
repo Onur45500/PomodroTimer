@@ -20,7 +20,6 @@
             Reset
         </button>
     </div>
-
     <button class="btn btn-success mt-2" @onclick="StartBreakTimer">
         Get a Break (5 mins)
     </button>
@@ -104,18 +103,25 @@
         InvokeAsync(StateHasChanged);
     }
 
-    // Start a 5-minute break timer
+    // Start a 5-minute break timer, interrupting any running session
     private void StartBreakTimer()
     {
-        if (!isTimerRunning && timer == null)
-        {
-            isTimerRunning = true;
-            sessionType = "Break";
-            timeLeft = TimeSpan.FromMinutes(5);
-            timer = new System.Threading.Timer(UpdateTimer, null, 1000, 1000);
+        // Interrupt the current session and start the break timer
+        isTimerRunning = true;
+        sessionType = "Break";
+        timeLeft = TimeSpan.FromMinutes(5);
 
-            // Force UI refresh
-            InvokeAsync(StateHasChanged);
+        // Ensure the timer is set or updated to run every second
+        if (timer == null)
+        {
+            timer = new System.Threading.Timer(UpdateTimer, null, 1000, 1000);
         }
+        else
+        {
+            timer.Change(1000, 1000); // Restart the timer for the break
+        }
+
+        // Force UI refresh
+        InvokeAsync(StateHasChanged);
     }
 }
