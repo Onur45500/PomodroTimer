@@ -11,13 +11,15 @@
 
     <p>Session: @sessionType</p>
 
-    <button class="@startPauseButtonClass" @onclick="StartPauseTimer" style="transition: background-color 0.3s, color 0.3s;">
-        @((isTimerRunning ? "Pause" : "Start"))
-    </button>
+    <div>
+        <button class="btn @startPauseButtonClass" @onclick="StartPauseTimer" style="transition: background-color 0.3s, color 0.3s;">
+            @((isTimerRunning ? "Pause" : "Start"))
+        </button>
 
-    <button class="btn btn-danger" @onclick="ResetTimer">
-        Reset
-    </button>
+        <button class="btn btn-danger" @onclick="ResetTimer">
+            Reset
+        </button>
+    </div>
 
     <button class="btn btn-success mt-2" @onclick="StartBreakTimer">
         Get a Break (5 mins)
@@ -31,7 +33,9 @@
     private System.Threading.Timer? timer;
     private int pomodoroDuration = 25; // in minutes
     private int shortBreakDuration = 5; // in minutes
-    private string startPauseButtonClass => isTimerRunning ? "btn btn-warning" : "btn btn-primary"; // Dynamically change button color
+
+    // Dynamically change button color
+    private string startPauseButtonClass => isTimerRunning ? "btn-warning" : "btn-primary";
 
     // Start or pause the timer
     private void StartPauseTimer()
@@ -40,14 +44,18 @@
         {
             // Pause the timer
             isTimerRunning = false;
-            timer?.Change(Timeout.Infinite, 0);
+            timer?.Change(Timeout.Infinite, 0); // Stop the timer
         }
-        else if (timer == null)
+        else
         {
-            // Start the timer if it's not already running
+            // Start the timer or resume if it was paused
             isTimerRunning = true;
-            timer = new System.Threading.Timer(UpdateTimer, null, 1000, 1000);
+            timer ??= new System.Threading.Timer(UpdateTimer, null, 1000, 1000);
+            timer.Change(1000, 1000); // Resume the timer if it was paused
         }
+
+        // Force UI refresh immediately after state change
+        InvokeAsync(StateHasChanged);
     }
 
     // Update the timer each second
@@ -91,6 +99,8 @@
         timer = null; // Reset the timer to null
         timeLeft = TimeSpan.FromMinutes(pomodoroDuration);
         sessionType = "Work Session";
+
+        // Force UI refresh
         InvokeAsync(StateHasChanged);
     }
 
@@ -103,6 +113,8 @@
             sessionType = "Break";
             timeLeft = TimeSpan.FromMinutes(5);
             timer = new System.Threading.Timer(UpdateTimer, null, 1000, 1000);
+
+            // Force UI refresh
             InvokeAsync(StateHasChanged);
         }
     }
